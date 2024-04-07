@@ -1,0 +1,28 @@
+/* styles/ProductTab.css */
+
+.products-tab {
+    padding: 20px;
+  }
+  
+  .section-title {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+  }
+  
+  .product-group {
+    margin-bottom: 20px;
+  }
+  
+  .product-item {
+    margin-bottom: 10px;
+  }
+  
+  .product-name-input {
+    width: 300px;
+    padding: 5px;
+  }
+  
+  .validation-error {
+    color: red;
+  }
+  
