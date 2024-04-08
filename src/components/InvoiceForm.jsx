@@ -7,13 +7,14 @@ import Form from "react-bootstrap/Form";
 import Card from "react-bootstrap/Card";
 import InvoiceItem from "./InvoiceItem";
 import InvoiceModal from "./InvoiceModal";
-import { BiArrowBack } from "react-icons/bi";
+import { BiArrowBack} from "react-icons/bi";
 import InputGroup from "react-bootstrap/InputGroup";
 import { useDispatch } from "react-redux";
 import { addInvoice, updateInvoice } from "../redux/invoicesSlice";
 import { Link, useParams, useLocation, useNavigate } from "react-router-dom";
 import generateRandomId from "../utils/generateRandomId";
-import { useInvoiceListData } from "../redux/hooks";
+import { useInvoiceListData, useProductListData } from "../redux/hooks";
+import ProductList from "./ProductList";
 
 const InvoiceForm = () => {
   const dispatch = useDispatch();
@@ -26,6 +27,7 @@ const InvoiceForm = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [copyId, setCopyId] = useState("");
   const { getOneInvoice, listSize } = useInvoiceListData();
+  const { productList } = useProductListData();
   const [formData, setFormData] = useState(
     isEdit
       ? getOneInvoice(params.id)
@@ -56,10 +58,9 @@ const InvoiceForm = () => {
           currency: "$",
           items: [
             {
-              itemId: 0,
-              itemName: "",
-              itemDescription: "",
-              itemPrice: "1.00",
+              itemId: Date.now().toString(),
+              productId: "",
+              itemGroup: "",
               itemQuantity: 1,
             },
           ],
@@ -78,20 +79,22 @@ const InvoiceForm = () => {
     handleCalculateTotal();
   };
 
-  const handleAddEvent = () => {
-    const id = (+new Date() + Math.floor(Math.random() * 999999)).toString(36);
-    const newItem = {
-      itemId: id,
-      itemName: "",
-      itemDescription: "",
-      itemPrice: "1.00",
-      itemQuantity: 1,
-    };
-    setFormData({
-      ...formData,
-      items: [...formData.items, newItem],
-    });
-    handleCalculateTotal();
+  const handleAddEvent = (items) => {
+    const id = Date.now().toString();
+    if(items.length < productList.length) {
+      const newItem = {
+        itemId: id,
+        productId: "",
+        itemGroup: "",
+        itemQuantity: 1,
+      };
+      setFormData({
+        ...formData,
+        items: [...formData.items, newItem],
+      });
+      handleCalculateTotal();
+    }
+    else alert("Add more products to the product list first!");
   };
 
   const handleCalculateTotal = () => {
@@ -99,9 +102,10 @@ const InvoiceForm = () => {
       let subTotal = 0;
 
       prevFormData.items.forEach((item) => {
+        const itemPrice = productList.find((product) => product.productId == item.productId)?.productPrice || 0;
         subTotal +=
-          parseFloat(item.itemPrice).toFixed(2) * parseInt(item.itemQuantity);
-      });
+          parseFloat(itemPrice).toFixed(2) * parseInt(item.itemQuantity);
+        });
 
       const taxAmount = parseFloat(
         subTotal * (prevFormData.taxRate / 100)
@@ -127,13 +131,13 @@ const InvoiceForm = () => {
 
   const onItemizedItemEdit = (evt, id) => {
     const updatedItems = formData.items.map((oldItem) => {
-      if (oldItem.itemId === id) {
+      if (oldItem.itemId == id) {
         return { ...oldItem, [evt.target.name]: evt.target.value };
       }
       return oldItem;
     });
-
-    setFormData({ ...formData, items: updatedItems });
+    const sortedItems = updatedItems.sort((a, b) => a.itemId.localeCompare(b.itemId));
+    setFormData({ ...formData, items: sortedItems });
     handleCalculateTotal();
   };
 
@@ -301,12 +305,14 @@ const InvoiceForm = () => {
                 />
               </Col>
             </Row>
+            <ProductList currency={formData.currency}/>
             <InvoiceItem
               onItemizedItemEdit={onItemizedItemEdit}
               onRowAdd={handleAddEvent}
               onRowDel={handleRowDel}
               currency={formData.currency}
               items={formData.items}
+              productList={productList}
             />
             <Row className="mt-4 justify-content-end">
               <Col lg={6}>

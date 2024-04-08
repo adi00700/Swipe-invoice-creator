@@ -1,3 +1,4 @@
+
 import { createSlice } from "@reduxjs/toolkit";
 
 const invoicesSlice = createSlice({
@@ -12,11 +13,12 @@ const invoicesSlice = createSlice({
     },
     updateInvoice: (state, action) => {
       const index = state.findIndex(
-        (invoice) => invoice.id === action.payload.id
+        (invoice) => invoice.id == action.payload.id
       );
       if (index !== -1) {
         state[index] = action.payload.updatedInvoice;
       }
+      else{console.log("error")}
     },
   },
 });
